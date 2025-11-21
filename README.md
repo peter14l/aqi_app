@@ -33,18 +33,6 @@ A cross-platform Air Quality Index (AQI) monitoring application built with Flutt
     flutter run
     ```
 
-### Configuration
-
-The app uses mock data by default. To enable real backend services (Supabase):
-
-1.  Rename `.env.example` to `.env` (create one if not exists).
-2.  Add your Supabase credentials:
-    ```
-    SUPABASE_URL=your_supabase_url
-    SUPABASE_ANON_KEY=your_supabase_anon_key
-    ```
-3.  Uncomment the Supabase initialization code in `lib/main.dart`.
-
 ## Project Structure
 
 -   `lib/src/features`: Feature-based architecture (AQI, Habits).
