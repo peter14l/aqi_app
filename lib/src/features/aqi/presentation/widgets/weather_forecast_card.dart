@@ -51,6 +51,7 @@ class WeatherForecastCard extends ConsumerWidget {
             height: 140,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
+              physics: const AlwaysScrollableScrollPhysics(),
               itemCount: dailyForecasts.length,
               itemBuilder: (context, index) {
                 return _buildDayForecast(

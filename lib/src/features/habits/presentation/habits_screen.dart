@@ -89,6 +89,7 @@ class HabitsScreen extends ConsumerWidget {
                   final achievements = snapshot.data!;
                   return ListView.separated(
                     scrollDirection: Axis.horizontal,
+                    physics: const AlwaysScrollableScrollPhysics(),
                     itemCount: achievements.length,
                     separatorBuilder:
                         (context, index) => const SizedBox(width: 12),

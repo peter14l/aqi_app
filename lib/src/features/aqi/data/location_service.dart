@@ -53,49 +53,108 @@ class LocationService {
   /// Get current device location
   Future<LocationModel> getCurrentLocation() async {
     try {
+      print('[LocationService] Starting location detection...');
+
       // Check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      print('[LocationService] Location services enabled: $serviceEnabled');
+
       if (!serviceEnabled) {
+        print(
+          '[LocationService] Location services are disabled, using fallback',
+        );
         throw Exception('Location services are disabled');
       }
 
       // Check location permissions
       LocationPermission permission = await Geolocator.checkPermission();
+      print('[LocationService] Current permission: $permission');
+
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
+        print('[LocationService] Permission after request: $permission');
+
         if (permission == LocationPermission.denied) {
+          print('[LocationService] Location permissions denied by user');
           throw Exception('Location permissions are denied');
         }
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
+        print('[LocationService] Location permissions permanently denied');
         throw Exception('Location permissions are permanently denied');
       }
 
-      // Get current position
+      // Get current position with timeout for web/desktop
+      print('[LocationService] Getting current position...');
+
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10), // Add timeout for web/desktop
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          print(
+            '[LocationService] Position request timed out (common on web/desktop)',
+          );
+          throw Exception('Location request timed out');
+        },
       );
 
-      // Get address from coordinates
-      final placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
+      print(
+        '[LocationService] Position obtained: ${position.latitude}, ${position.longitude}',
       );
 
-      if (placemarks.isNotEmpty) {
-        final place = placemarks.first;
-        return LocationModel(
-          name: '${place.locality ?? 'Unknown Location'}',
-          latitude: position.latitude,
-          longitude: position.longitude,
-          country: place.country,
-          admin1: place.administrativeArea,
+      // Try to get address from coordinates
+      // This may fail on web/desktop, so we'll use a fallback
+      try {
+        print(
+          '[LocationService] Attempting to get place name from coordinates...',
         );
-      } else {
-        throw Exception('Could not determine location name');
+        final placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+
+        if (placemarks.isNotEmpty) {
+          final place = placemarks.first;
+          final locationName =
+              place.locality ??
+              place.subAdministrativeArea ??
+              place.administrativeArea ??
+              'Location (${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)})';
+
+          print('[LocationService] Location name resolved: $locationName');
+
+          return LocationModel(
+            name: locationName,
+            latitude: position.latitude,
+            longitude: position.longitude,
+            country: place.country,
+            admin1: place.administrativeArea,
+          );
+        }
+      } catch (geocodingError) {
+        print(
+          '[LocationService] Geocoding failed (common on web/desktop): $geocodingError',
+        );
+        // Fall through to use coordinates as name
       }
+
+      // Fallback: use coordinates as the location name
+      print('[LocationService] Using coordinates as location name');
+      return LocationModel(
+        name:
+            'Location (${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)})',
+        latitude: position.latitude,
+        longitude: position.longitude,
+        country: null,
+        admin1: null,
+      );
     } catch (e) {
+      print('[LocationService] Error getting location: $e');
+      print('[LocationService] Falling back to default location (Kraków)');
+
       // Fallback to default location if there's an error
       return const LocationModel(
         name: 'Kraków',

@@ -20,24 +20,39 @@ class LocationNotifier extends Notifier<LocationState?> {
 
   Future<void> _initializeLocation() async {
     try {
+      print('[LocationNotifier] Initializing location...');
+
       // First try to load saved location
       final savedLocation = await _loadSavedLocation();
       if (savedLocation != null) {
+        print(
+          '[LocationNotifier] Loaded saved location: ${savedLocation.name}',
+        );
         state = savedLocation;
       }
-      
+
       // Then try to get current location
+      print('[LocationNotifier] Attempting to get current location...');
       final currentLocation = await _locationService.getCurrentLocation();
+      print(
+        '[LocationNotifier] Current location obtained: ${currentLocation.name} (${currentLocation.latitude}, ${currentLocation.longitude})',
+      );
+
       state = LocationState(
         name: currentLocation.name,
         latitude: currentLocation.latitude,
         longitude: currentLocation.longitude,
         country: currentLocation.country,
       );
-      
+
+      print('[LocationNotifier] State updated with current location');
+
       // Save the detected location
       await _saveLocation(state!);
+      print('[LocationNotifier] Location saved to preferences');
     } catch (e) {
+      print('[LocationNotifier] Error initializing location: $e');
+
       // If both saved and current location fail, use default
       state ??= const LocationState(
         name: 'Kraków',
@@ -45,6 +60,8 @@ class LocationNotifier extends Notifier<LocationState?> {
         longitude: 19.9450,
         country: 'Poland',
       );
+
+      print('[LocationNotifier] Using default location: ${state?.name}');
     }
   }
 
