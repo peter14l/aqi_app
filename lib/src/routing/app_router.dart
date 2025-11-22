@@ -8,12 +8,43 @@ import '../features/route/presentation/route_exposure_screen.dart';
 import '../features/purifier/presentation/screens/purifier_list_screen.dart';
 import '../features/purifier/presentation/screens/add_purifier_screen.dart';
 import '../features/purifier/presentation/screens/purifier_detail_screen.dart';
+import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/presentation/signup_screen.dart';
+import '../features/auth/application/auth_provider.dart';
 import 'scaffold_with_navbar.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authProvider);
+
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/login',
+    redirect: (context, state) {
+      final isAuthenticated = authState.isAuthenticated;
+      final isOnAuthPage =
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/signup';
+
+      // If not authenticated and not on auth page, redirect to login
+      if (!isAuthenticated && !isOnAuthPage) {
+        return '/login';
+      }
+
+      // If authenticated and on auth page, redirect to home
+      if (isAuthenticated && isOnAuthPage) {
+        return '/';
+      }
+
+      // No redirect needed
+      return null;
+    },
     routes: [
+      // Auth routes (no navbar)
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const SignupScreen(),
+      ),
+      // App routes (with navbar)
       ShellRoute(
         builder: (context, state, child) {
           return ScaffoldWithNavbar(child: child);

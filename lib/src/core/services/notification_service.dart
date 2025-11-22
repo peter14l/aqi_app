@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logger/logger.dart';
 
@@ -51,6 +52,108 @@ class NotificationService {
   void _onNotificationTapped(NotificationResponse response) {
     _logger.d('Notification tapped: ${response.payload}');
     // Handle notification tap - navigate to relevant screen
+  }
+
+  /// Show an AQI increase alert notification
+  Future<void> showAqiIncreaseAlert({
+    required int previousAqi,
+    required int currentAqi,
+    required String previousCategory,
+    required String currentCategory,
+    required String location,
+  }) async {
+    if (!_initialized) await initialize();
+
+    try {
+      final difference = currentAqi - previousAqi;
+      final androidDetails = AndroidNotificationDetails(
+        'aqi_changes',
+        'AQI Changes',
+        channelDescription: 'Notifications when air quality changes',
+        importance: Importance.high,
+        priority: Priority.high,
+        showWhen: true,
+        color: _getNotificationColor(currentAqi),
+      );
+
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      final details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      await _notifications.show(
+        'aqi_increase'.hashCode,
+        '⚠️ Air Quality Worsened in $location',
+        'AQI increased from $previousAqi ($previousCategory) to $currentAqi ($currentCategory). Consider limiting outdoor activities.',
+        details,
+        payload: 'aqi_change',
+      );
+
+      _logger.i('AQI increase notification shown: $previousAqi → $currentAqi');
+    } catch (e, stackTrace) {
+      _logger.e(
+        'Failed to show AQI increase notification',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  /// Show an AQI decrease alert notification
+  Future<void> showAqiDecreaseAlert({
+    required int previousAqi,
+    required int currentAqi,
+    required String previousCategory,
+    required String currentCategory,
+    required String location,
+  }) async {
+    if (!_initialized) await initialize();
+
+    try {
+      final difference = previousAqi - currentAqi;
+      final androidDetails = AndroidNotificationDetails(
+        'aqi_changes',
+        'AQI Changes',
+        channelDescription: 'Notifications when air quality changes',
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+        showWhen: true,
+        color: _getNotificationColor(currentAqi),
+      );
+
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      final details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      await _notifications.show(
+        'aqi_decrease'.hashCode,
+        '✅ Air Quality Improved in $location',
+        'AQI decreased from $previousAqi ($previousCategory) to $currentAqi ($currentCategory). Great time to go outside!',
+        details,
+        payload: 'aqi_change',
+      );
+
+      _logger.i('AQI decrease notification shown: $previousAqi → $currentAqi');
+    } catch (e, stackTrace) {
+      _logger.e(
+        'Failed to show AQI decrease notification',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   /// Show an AQI alert notification
@@ -183,6 +286,17 @@ class NotificationService {
   Future<void> cancelAll() async {
     await _notifications.cancelAll();
     _logger.i('All notifications cancelled');
+  }
+
+  /// Get notification color based on AQI value
+  Color _getNotificationColor(int aqi) {
+    if (aqi <= 50) return const Color(0xFF00E400); // Good - Green
+    if (aqi <= 100) return const Color(0xFFFFFF00); // Moderate - Yellow
+    if (aqi <= 150)
+      return const Color(0xFFFF7E00); // Unhealthy for Sensitive - Orange
+    if (aqi <= 200) return const Color(0xFFFF0000); // Unhealthy - Red
+    if (aqi <= 300) return const Color(0xFF8F3F97); // Very Unhealthy - Purple
+    return const Color(0xFF7E0023); // Hazardous - Maroon
   }
 
   /// Request notification permissions (iOS)
