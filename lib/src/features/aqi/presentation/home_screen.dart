@@ -12,6 +12,9 @@ import 'widgets/weather_forecast_card.dart';
 import 'widgets/weather_section.dart';
 import 'widgets/location_search_dialog.dart';
 import 'widgets/slide_to_refresh_button.dart';
+import 'widgets/info_card.dart';
+import 'widgets/sun_moon_card.dart';
+import 'widgets/wind_card.dart';
 import '../data/location_state_provider.dart';
 import '../../../core/widgets/animated_widgets.dart';
 import '../../../core/widgets/skeleton_loader.dart';
@@ -31,7 +34,7 @@ class HomeScreen extends ConsumerWidget {
         // Determine colors based on theme mode
         final backgroundColor =
             isDarkMode
-                ? AppColors.darkBackground
+                ? AppColors.getAqiDarkBackgroundColor(data.aqi)
                 : AppColors.getAqiBackgroundColor(data.aqi);
 
         return Scaffold(
@@ -90,7 +93,9 @@ class HomeScreen extends ConsumerWidget {
     final textColor =
         isDarkMode ? AppColors.textPrimary : AppColors.textPrimaryDark;
     final cardColor =
-        isDarkMode ? AppColors.darkCard : AppColors.particulatesCardBackground;
+        isDarkMode
+            ? AppColors.getAqiDarkCardColor(data.aqi)
+            : Colors.white.withOpacity(0.8);
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -313,7 +318,92 @@ class HomeScreen extends ConsumerWidget {
 
               // 5. Weather Forecast Card
               const SizedBox(height: 16),
-              WeatherForecastCard(dailyForecasts: data.weather.dailyForecasts),
+              WeatherForecastCard(
+                dailyForecasts: data.weather.dailyForecasts,
+                aqi: data.aqi,
+              ),
+
+              const SizedBox(height: 24),
+
+              // 6. Detailed Info Grid
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 1.0,
+                children: [
+                  InfoCard(
+                    title: 'UV Index',
+                    value: '${data.weather.uvIndexMax.round()}',
+                    footer: _getUvDescription(data.weather.uvIndexMax),
+                    icon: Icons.wb_sunny_outlined,
+                  ),
+                  InfoCard(
+                    title: 'Feels Like',
+                    value: '${data.weather.feelsLike}°',
+                    footer: 'Actual: ${data.weather.temp.round()}°',
+                    icon: Icons.thermostat,
+                  ),
+                  InfoCard(
+                    title: 'Visibility',
+                    value:
+                        '${(data.weather.visibility / 1000).toStringAsFixed(1)}',
+                    unit: 'km',
+                    footer: _getVisibilityDescription(data.weather.visibility),
+                    icon: Icons.visibility_outlined,
+                  ),
+                  InfoCard(
+                    title: 'Pressure',
+                    value: '${data.weather.pressure.round()}',
+                    unit: 'hPa',
+                    footer: 'Atmospheric',
+                    icon: Icons.compress,
+                  ),
+                  InfoCard(
+                    title: 'Humidity',
+                    value: '${data.weather.humidity.round()}',
+                    unit: '%',
+                    footer:
+                        'Dew point: ${(data.weather.temp - ((100 - data.weather.humidity) / 5)).round()}°',
+                    icon: Icons.water_drop_outlined,
+                  ),
+                  InfoCard(
+                    title: 'Precipitation',
+                    value: '${data.weather.precipitation}',
+                    unit: 'mm',
+                    footer: 'In last hour',
+                    icon: Icons.umbrella_outlined,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // 7. Sun & Moon
+              SunMoonCard(
+                sunrise: data.weather.sunrise,
+                sunset: data.weather.sunset,
+                isSun: true,
+              ),
+              const SizedBox(height: 16),
+              SunMoonCard(
+                sunrise:
+                    data
+                        .weather
+                        .sunrise, // Using sunrise/set for moon mock temporarily if needed or just reuse
+                sunset: data.weather.sunset,
+                isSun: false,
+              ),
+
+              const SizedBox(height: 16),
+
+              // 8. Wind
+              WindCard(
+                windSpeed: data.weather.windSpeed,
+                windDirection: data.weather.windDirection,
+              ),
 
               // 6. Refresh Button
               Padding(
@@ -357,7 +447,9 @@ class HomeScreen extends ConsumerWidget {
     final textColor =
         isDarkMode ? AppColors.textPrimary : AppColors.textPrimaryDark;
     final cardColor =
-        isDarkMode ? AppColors.darkCard : AppColors.particulatesCardBackground;
+        isDarkMode
+            ? AppColors.getAqiDarkCardColor(data.aqi)
+            : Colors.white.withOpacity(0.8);
 
     return SingleChildScrollView(
       child: Center(
@@ -530,6 +622,36 @@ class HomeScreen extends ConsumerWidget {
 
                           const SizedBox(height: 40),
 
+                          // Wind Card
+                          WindCard(
+                            windSpeed: data.weather.windSpeed,
+                            windDirection: data.weather.windDirection,
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Sun & Moon
+                          Row(
+                            children: [
+                              Expanded(
+                                child: SunMoonCard(
+                                  sunrise: data.weather.sunrise,
+                                  sunset: data.weather.sunset,
+                                  isSun: true,
+                                ),
+                              ),
+                              const SizedBox(width: 24),
+                              Expanded(
+                                child: SunMoonCard(
+                                  sunrise: data.weather.sunrise,
+                                  sunset: data.weather.sunset,
+                                  isSun: false,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 40),
+
                           // Refresh Button
                           SizedBox(
                             width: double.infinity,
@@ -563,6 +685,67 @@ class HomeScreen extends ConsumerWidget {
                           // Weather Forecast Card
                           WeatherForecastCard(
                             dailyForecasts: data.weather.dailyForecasts,
+                            aqi: data.aqi,
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Detailed Info Grid
+                          GridView.count(
+                            crossAxisCount: 2,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            mainAxisSpacing: 24,
+                            crossAxisSpacing: 24,
+                            childAspectRatio: 1.5, // Wider cards on desktop
+                            children: [
+                              InfoCard(
+                                title: 'UV Index',
+                                value: '${data.weather.uvIndexMax.round()}',
+                                footer: _getUvDescription(
+                                  data.weather.uvIndexMax,
+                                ),
+                                icon: Icons.wb_sunny_outlined,
+                              ),
+                              InfoCard(
+                                title: 'Feels Like',
+                                value: '${data.weather.feelsLike}°',
+                                footer: 'Actual: ${data.weather.temp.round()}°',
+                                icon: Icons.thermostat,
+                              ),
+                              InfoCard(
+                                title: 'Visibility',
+                                value:
+                                    '${(data.weather.visibility / 1000).toStringAsFixed(1)}',
+                                unit: 'km',
+                                footer: _getVisibilityDescription(
+                                  data.weather.visibility,
+                                ),
+                                icon: Icons.visibility_outlined,
+                              ),
+                              InfoCard(
+                                title: 'Pressure',
+                                value: '${data.weather.pressure.round()}',
+                                unit: 'hPa',
+                                footer: 'Atmospheric',
+                                icon: Icons.compress,
+                              ),
+                              InfoCard(
+                                title: 'Humidity',
+                                value: '${data.weather.humidity.round()}',
+                                unit: '%',
+                                footer:
+                                    'Dew point: ${(data.weather.temp - ((100 - data.weather.humidity) / 5)).round()}°',
+                                icon: Icons.water_drop_outlined,
+                              ),
+                              InfoCard(
+                                title: 'Precipitation',
+                                value: '${data.weather.precipitation}',
+                                unit: 'mm',
+                                footer: 'In last hour',
+                                icon: Icons.umbrella_outlined,
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -602,5 +785,21 @@ class HomeScreen extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  String _getUvDescription(double uv) {
+    if (uv <= 2) return 'Low';
+    if (uv <= 5) return 'Moderate';
+    if (uv <= 7) return 'High';
+    if (uv <= 10) return 'Very High';
+    return 'Extreme';
+  }
+
+  String _getVisibilityDescription(double meters) {
+    if (meters >= 10000) return 'Excellent';
+    if (meters >= 5000) return 'Good';
+    if (meters >= 2000) return 'Fair';
+    if (meters >= 1000) return 'Poor';
+    return 'Very Poor';
   }
 }

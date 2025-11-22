@@ -8,8 +8,13 @@ import '../../../theme/theme_provider.dart';
 
 class WeatherForecastCard extends ConsumerWidget {
   final List<DailyForecast> dailyForecasts;
+  final int aqi;
 
-  const WeatherForecastCard({super.key, required this.dailyForecasts});
+  const WeatherForecastCard({
+    super.key,
+    required this.dailyForecasts,
+    required this.aqi,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -17,7 +22,9 @@ class WeatherForecastCard extends ConsumerWidget {
     final textColor =
         isDarkMode ? AppColors.textPrimary : AppColors.textPrimaryDark;
     final cardColor =
-        isDarkMode ? AppColors.darkCard : AppColors.particulatesCardBackground;
+        isDarkMode
+            ? AppColors.getAqiDarkCardColor(aqi)
+            : Colors.white.withOpacity(0.8);
     final dayCardColor =
         isDarkMode
             ? Colors.white.withOpacity(0.05)

@@ -56,6 +56,28 @@ final aqiControllerProvider = FutureProvider<HomeData>((ref) async {
       condition: WeatherModel.getCondition(currentCode),
       description: WeatherModel.getDescription(currentCode),
       weatherCode: currentCode,
+      feelsLike: (current['feelsLike'] as num).toInt(),
+      visibility: (current['visibility'] as num).toDouble(),
+      windDirection: (current['windDirection'] as num).toInt(),
+      precipitation: (current['precipitation'] as num).toDouble(),
+      uvIndexMax:
+          (daily['uvIndexMax'] != null &&
+                  (daily['uvIndexMax'] as List).isNotEmpty)
+              ? (daily['uvIndexMax'][0] as num).toDouble()
+              : 0.0,
+      sunrise:
+          (daily['sunrise'] != null && (daily['sunrise'] as List).isNotEmpty)
+              ? daily['sunrise'][0].toString()
+              : '',
+      sunset:
+          (daily['sunset'] != null && (daily['sunset'] as List).isNotEmpty)
+              ? daily['sunset'][0].toString()
+              : '',
+      precipitationSum:
+          (daily['precipitationSum'] != null &&
+                  (daily['precipitationSum'] as List).isNotEmpty)
+              ? (daily['precipitationSum'][0] as num).toDouble()
+              : 0.0,
       dailyForecasts: dailyForecasts,
     );
 

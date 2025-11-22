@@ -112,4 +112,16 @@ class AppColors {
       return aqiOrangeBackground; // Unhealthy for Sensitive Groups
     return aqiOrangeBackground; // Default to orange for higher values for now, or add more specific ones
   }
+
+  // Get dark background color based on AQI
+  static Color getAqiDarkBackgroundColor(int aqi) {
+    if (aqi <= 50) return const Color(0xFF052E16); // Deep Green
+    return const Color(0xFF3F1808); // Deep Orange/Brown
+  }
+
+  // Get dark card color based on AQI
+  static Color getAqiDarkCardColor(int aqi) {
+    if (aqi <= 50) return const Color(0xFF0A4523); // Dark Green Card
+    return const Color(0xFF5C240D); // Dark Orange Card
+  }
 }

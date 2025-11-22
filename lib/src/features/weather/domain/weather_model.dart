@@ -5,6 +5,14 @@ class WeatherModel {
   final double pressure;
   final String condition; // e.g., 'Clear', 'Clouds', 'Rain'
   final String description;
+  final int feelsLike;
+  final double visibility;
+  final int windDirection;
+  final double precipitation;
+  final double uvIndexMax;
+  final String sunrise;
+  final String sunset;
+  final double precipitationSum;
   final int weatherCode;
   final List<DailyForecast> dailyForecasts;
 
@@ -16,6 +24,14 @@ class WeatherModel {
     required this.condition,
     required this.description,
     required this.weatherCode,
+    required this.feelsLike,
+    required this.visibility,
+    required this.windDirection,
+    required this.precipitation,
+    required this.uvIndexMax,
+    required this.sunrise,
+    required this.sunset,
+    required this.precipitationSum,
     this.dailyForecasts = const [],
   });
 
@@ -29,6 +45,28 @@ class WeatherModel {
     final pressure = (current['surface_pressure'] as num?)?.toDouble() ?? 0.0;
     final windSpeed = (current['wind_speed_10m'] as num?)?.toDouble() ?? 0.0;
     final weatherCode = (current['weather_code'] as num?)?.toInt() ?? 0;
+    final feelsLike = (current['apparent_temperature'] as num?)?.toInt() ?? 0;
+    final visibility = (current['visibility'] as num?)?.toDouble() ?? 0.0;
+    final windDirection = (current['wind_direction_10m'] as num?)?.toInt() ?? 0;
+    final precipitation = (current['precipitation'] as num?)?.toDouble() ?? 0.0;
+
+    // Daily values (take first element for today)
+    final uvIndexMax =
+        (daily['uv_index_max'] as List?)?.isNotEmpty == true
+            ? (daily['uv_index_max'][0] as num).toDouble()
+            : 0.0;
+    final sunrise =
+        (daily['sunrise'] as List?)?.isNotEmpty == true
+            ? daily['sunrise'][0].toString()
+            : '';
+    final sunset =
+        (daily['sunset'] as List?)?.isNotEmpty == true
+            ? daily['sunset'][0].toString()
+            : '';
+    final precipitationSum =
+        (daily['precipitation_sum'] as List?)?.isNotEmpty == true
+            ? (daily['precipitation_sum'][0] as num).toDouble()
+            : 0.0;
 
     // Parse daily forecast
     List<DailyForecast> forecasts = [];
@@ -59,6 +97,14 @@ class WeatherModel {
       condition: getCondition(weatherCode),
       description: getDescription(weatherCode),
       weatherCode: weatherCode,
+      feelsLike: feelsLike,
+      visibility: visibility,
+      windDirection: windDirection,
+      precipitation: precipitation,
+      uvIndexMax: uvIndexMax,
+      sunrise: sunrise,
+      sunset: sunset,
+      precipitationSum: precipitationSum,
       dailyForecasts: forecasts,
     );
   }

@@ -17,8 +17,8 @@ class WeatherService {
       final url = Uri.parse(
         '${ApiConfig.openMeteoWeatherUrl}/forecast?'
         'latitude=$latitude&longitude=$longitude'
-        '&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,weather_code'
-        '&daily=temperature_2m_max,temperature_2m_min,weather_code'
+        '&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,weather_code,apparent_temperature,visibility,wind_direction_10m,precipitation'
+        '&daily=temperature_2m_max,temperature_2m_min,weather_code,uv_index_max,sunrise,sunset,precipitation_sum'
         '&timezone=auto',
       );
 
@@ -36,12 +36,20 @@ class WeatherService {
             'pressure': (current['surface_pressure'] as num).round(),
             'windSpeed': (current['wind_speed_10m'] as num).round(),
             'weatherCode': current['weather_code'] as int,
+            'feelsLike': (current['apparent_temperature'] as num).round(),
+            'visibility': (current['visibility'] as num).toDouble(),
+            'windDirection': (current['wind_direction_10m'] as num).round(),
+            'precipitation': (current['precipitation'] as num).toDouble(),
           },
           'daily': {
             'maxTemps': (daily['temperature_2m_max'] as List).cast<num>(),
             'minTemps': (daily['temperature_2m_min'] as List).cast<num>(),
             'weatherCodes': (daily['weather_code'] as List).cast<int>(),
             'dates': (daily['time'] as List).cast<String>(),
+            'uvIndexMax': (daily['uv_index_max'] as List).cast<num>(),
+            'sunrise': (daily['sunrise'] as List).cast<String>(),
+            'sunset': (daily['sunset'] as List).cast<String>(),
+            'precipitationSum': (daily['precipitation_sum'] as List).cast<num>(),
           },
         };
       } else {

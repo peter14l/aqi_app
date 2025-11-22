@@ -16,7 +16,9 @@ class WeatherSection extends ConsumerWidget {
     final textColor =
         isDarkMode ? AppColors.textPrimary : AppColors.textPrimaryDark;
     final cardColor =
-        isDarkMode ? AppColors.darkCard : Colors.white.withOpacity(0.8);
+        isDarkMode
+            ? AppColors.getAqiDarkCardColor(data.aqi)
+            : Colors.white.withOpacity(0.8);
     final iconColor = isDarkMode ? AppColors.neonCyan : AppColors.iconDark;
 
     return Container(
